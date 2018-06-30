@@ -1,11 +1,11 @@
-package info.androidhive.rxjavasearch.network;
+package com.rxcontactviewer.network;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import com.rxcontactviewer.app.Const;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import info.androidhive.rxjavasearch.app.Const;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

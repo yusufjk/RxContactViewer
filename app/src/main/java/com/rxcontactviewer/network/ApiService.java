@@ -1,8 +1,9 @@
-package info.androidhive.rxjavasearch.network;
+package com.rxcontactviewer.network;
+
+import com.rxcontactviewer.network.model.Contact;
 
 import java.util.List;
 
-import info.androidhive.rxjavasearch.network.model.Contact;
 import io.reactivex.Single;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
@@ -13,6 +14,6 @@ import retrofit2.http.Query;
 
 public interface ApiService {
 
-    @GET("contacts.php")
+    @GET("/bins/jz6bp")
     Single<List<Contact>> getContacts(@Query("source") String source, @Query("search") String query);
 }

@@ -1,9 +1,9 @@
-package info.androidhive.rxjavasearch.view;
+package com.rxcontactviewer.view;
 
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,6 +16,11 @@ import android.widget.EditText;
 
 import com.jakewharton.rxbinding2.widget.RxTextView;
 import com.jakewharton.rxbinding2.widget.TextViewTextChangeEvent;
+import com.rxcontactviewer.R;
+import com.rxcontactviewer.adapter.ContactsAdapter;
+import com.rxcontactviewer.network.ApiClient;
+import com.rxcontactviewer.network.ApiService;
+import com.rxcontactviewer.network.model.Contact;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,28 +29,27 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import info.androidhive.rxjavasearch.R;
-import info.androidhive.rxjavasearch.adapter.ContactsAdapterFilterable;
-import info.androidhive.rxjavasearch.network.ApiClient;
-import info.androidhive.rxjavasearch.network.ApiService;
-import info.androidhive.rxjavasearch.network.model.Contact;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
-import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
-public class LocalSearchActivity extends AppCompatActivity implements ContactsAdapterFilterable.ContactsAdapterListener {
+public class RemoteSearchActivity extends AppCompatActivity implements ContactsAdapter.ContactsAdapterListener {
 
-    private static final String TAG = LocalSearchActivity.class.getSimpleName();
+    private static final String TAG = RemoteSearchActivity.class.getSimpleName();
 
     private CompositeDisposable disposable = new CompositeDisposable();
+    private PublishSubject<String> publishSubject = PublishSubject.create();
     private ApiService apiService;
-    private ContactsAdapterFilterable mAdapter;
+    private ContactsAdapter mAdapter;
     private List<Contact> contactsList = new ArrayList<>();
 
     @BindView(R.id.input_search)
     EditText inputSearch;
+
 
     @BindView(R.id.recycler_view)
     RecyclerView recyclerView;
@@ -55,14 +59,14 @@ public class LocalSearchActivity extends AppCompatActivity implements ContactsAd
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_local_search);
+        setContentView(R.layout.activity_remote_search);
         unbinder = ButterKnife.bind(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mAdapter = new ContactsAdapterFilterable(this, contactsList, this);
+        mAdapter = new ContactsAdapter(this, contactsList, this);
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
@@ -74,33 +78,45 @@ public class LocalSearchActivity extends AppCompatActivity implements ContactsAd
 
         apiService = ApiClient.getClient().create(ApiService.class);
 
-        disposable.add(RxTextView.textChangeEvents(inputSearch)
-                .skipInitialValue()
-                .debounce(300, TimeUnit.MILLISECONDS)
-                /*.filter(new Predicate<TextViewTextChangeEvent>() {
-                    @Override
-                    public boolean test(TextViewTextChangeEvent textViewTextChangeEvent) throws Exception {
-                        return TextUtils.isEmpty(textViewTextChangeEvent.text().toString()) || textViewTextChangeEvent.text().toString().length() > 2;
-                    }
-                })*/
-                .distinctUntilChanged()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(searchContacts()));
+        DisposableObserver<List<Contact>> observer = getSearchObserver();
+
+        disposable.add(
+                publishSubject
+                        .debounce(300, TimeUnit.MILLISECONDS)
+                        .distinctUntilChanged()
+                        .switchMapSingle(new Function<String, Single<List<Contact>>>() {
+                            @Override
+                            public Single<List<Contact>> apply(String s) {
+                                return apiService.getContacts(null, s)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread());
+                            }
+                        })
+                        .subscribeWith(observer));
 
 
-        // source: `gmail` or `linkedin`
-        // fetching all contacts on app launch
-        // only gmail will be fetched
-        fetchContacts("gmail");
+        // skipInitialValue() - skip for the first time when EditText empty
+        disposable.add(
+                RxTextView.textChangeEvents(inputSearch)
+                        .skipInitialValue()
+                        .debounce(300, TimeUnit.MILLISECONDS)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeWith(searchContactsTextWatcher()));
+
+        disposable.add(observer);
+
+        // passing empty string fetches all the contacts
+        publishSubject.onNext("");
     }
 
-    private DisposableObserver<TextViewTextChangeEvent> searchContacts() {
-        return new DisposableObserver<TextViewTextChangeEvent>() {
+    private DisposableObserver<List<Contact>> getSearchObserver() {
+        return new DisposableObserver<List<Contact>>() {
             @Override
-            public void onNext(TextViewTextChangeEvent textViewTextChangeEvent) {
-                Log.d(TAG, "Search query: " + textViewTextChangeEvent.text());
-                mAdapter.getFilter().filter(textViewTextChangeEvent.text());
+            public void onNext(List<Contact> contacts) {
+                contactsList.clear();
+                contactsList.addAll(contacts);
+                mAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -115,27 +131,25 @@ public class LocalSearchActivity extends AppCompatActivity implements ContactsAd
         };
     }
 
-    /**
-     * Fetching all contacts
-     */
-    private void fetchContacts(String source) {
-        disposable.add(apiService
-                .getContacts(source, null)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(new DisposableSingleObserver<List<Contact>>() {
-                    @Override
-                    public void onSuccess(List<Contact> contacts) {
-                        contactsList.clear();
-                        contactsList.addAll(contacts);
-                        mAdapter.notifyDataSetChanged();
-                    }
+    private DisposableObserver<TextViewTextChangeEvent> searchContactsTextWatcher() {
+        return new DisposableObserver<TextViewTextChangeEvent>() {
+            @Override
+            public void onNext(TextViewTextChangeEvent textViewTextChangeEvent) {
+                Log.d(TAG, "Search query: " + textViewTextChangeEvent.text());
 
-                    @Override
-                    public void onError(Throwable e) {
+                publishSubject.onNext(textViewTextChangeEvent.text().toString());
+            }
 
-                    }
-                }));
+            @Override
+            public void onError(Throwable e) {
+                Log.e(TAG, "onError: " + e.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        };
     }
 
     @Override

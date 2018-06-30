@@ -1,20 +1,17 @@
-package info.androidhive.rxjavasearch.view;
+package com.rxcontactviewer.view;
 
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
+
+import com.rxcontactviewer.R;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import info.androidhive.rxjavasearch.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,12 +26,6 @@ public class MainActivity extends AppCompatActivity {
 
         // white background notification bar
         whiteNotificationBar(toolbar);
-    }
-
-    @OnClick(R.id.btn_local_search)
-    public void openLocalSearch() {
-        // launching local search activity
-        startActivity(new Intent(MainActivity.this, LocalSearchActivity.class));
     }
 
     @OnClick(R.id.btn_remote_search)
