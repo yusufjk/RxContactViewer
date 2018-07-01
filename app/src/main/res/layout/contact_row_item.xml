@@ -13,15 +13,77 @@
         android:id="@+id/name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="2dp"
         android:fontFamily="sans-serif-medium"
+        android:text="Name"
         android:textColor="@color/contact_name"
-        android:textSize="@dimen/contact_name" />
+        android:textStyle="bold"
+        android:typeface="serif" />
+
+    <TextView
+        android:id="@+id/companyNameLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/name"
+        android:layout_margin="2dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Company Name :"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/contact_number" />
+
+    <TextView
+        android:id="@+id/parentLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/companyNameLabel"
+        android:layout_margin="2dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Parent :"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/contact_number" />
+
+    <TextView
+        android:id="@+id/managersLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/parentLabel"
+        android:layout_margin="2dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Managers :"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/contact_number" />
+
+    <TextView
+        android:id="@+id/addressesLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/managersLabel"
+        android:layout_margin="2dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Addresses :"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/contact_number" />
+
+    <TextView
+        android:id="@+id/phoneLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/addressesLabel"
+        android:layout_margin="2dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Phones :"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/contact_number" />
 
     <TextView
         android:id="@+id/companyName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/name"
+        android:layout_above="@+id/parentLabel"
+        android:layout_margin="2dp"
+        android:layout_toEndOf="@+id/companyNameLabel"
+        android:layout_toRightOf="@+id/companyNameLabel"
+        android:text="-"
         android:textColor="@color/contact_number"
         android:textSize="@dimen/contact_number" />
 
@@ -29,7 +91,11 @@
         android:id="@+id/parent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/companyName"
+        android:layout_above="@id/managersLabel"
+        android:layout_margin="2dp"
+        android:layout_toEndOf="@id/parentLabel"
+        android:layout_toRightOf="@+id/parentLabel"
+        android:text="-"
         android:textColor="@color/contact_number"
         android:textSize="@dimen/contact_number" />
 
@@ -37,7 +103,11 @@
         android:id="@+id/managers"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/parent"
+        android:layout_above="@id/addressesLabel"
+        android:layout_margin="2dp"
+        android:layout_toEndOf="@id/managersLabel"
+        android:layout_toRightOf="@+id/managersLabel"
+        android:text="-"
         android:textColor="@color/contact_number"
         android:textSize="@dimen/contact_number" />
 
@@ -45,7 +115,11 @@
         android:id="@+id/addresses"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/managers"
+        android:layout_above="@id/phoneLabel"
+        android:layout_margin="2dp"
+        android:layout_toEndOf="@id/addressesLabel"
+        android:layout_toRightOf="@+id/addressesLabel"
+        android:text="-"
         android:textColor="@color/contact_number"
         android:textSize="@dimen/contact_number" />
 
@@ -53,8 +127,11 @@
         android:id="@+id/phones"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/addresses"
+        android:layout_below="@+id/addressesLabel"
+        android:layout_margin="2dp"
+        android:layout_toEndOf="@id/phoneLabel"
+        android:layout_toRightOf="@+id/phoneLabel"
+        android:text="-"
         android:textColor="@color/contact_number"
         android:textSize="@dimen/contact_number" />
-
 </RelativeLayout>

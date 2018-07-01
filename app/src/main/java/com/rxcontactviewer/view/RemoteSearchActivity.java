@@ -44,13 +44,11 @@ public class RemoteSearchActivity extends AppCompatActivity {
     @BindView(R.id.input_search)
     EditText inputSearch;
 
-    private Unbinder unbinder;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_remote_search);
-        unbinder = ButterKnife.bind(this);
+        Unbinder unbinder = ButterKnife.bind(this);
         initViews();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
