@@ -1,10 +1,5 @@
 package com.rxcontactviewer.adapter;
 
-/**
- * Created by ravi on 31/01/18.
- */
-
-import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,68 +9,54 @@ import android.widget.TextView;
 import com.rxcontactviewer.R;
 import com.rxcontactviewer.network.model.Contact;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.MyViewHolder> {
-    private Context context;
-    private List<Contact> contactList;
-    private ContactsAdapterListener listener;
+public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.ViewHolder> {
+    private ArrayList<Contact> contacts;
 
-    @Override
-    public void onBindViewHolder(MyViewHolder holder, final int position) {
-        final Contact contact = contactList.get(position);
-        holder.name.setText(contact.getName());
-        holder.phones.setText(contact.getPhones().toString());
-        holder.companyName.setText(contact.getCompanyName());
-        holder.managers.setText(contact.getManagers().toString());
-        holder.parent.setText(contact.getParent());
-        holder.addresses.setText(contact.getAddresses().toString());
-
-    }
-
-
-    public ContactsAdapter(Context context, List<Contact> contactList, ContactsAdapterListener listener) {
-        this.context = context;
-        this.listener = listener;
-        this.contactList = contactList;
+    public ContactsAdapter(ArrayList<Contact> contacts) {
+        this.contacts = contacts;
     }
 
     @Override
-    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.contact_row_item, parent, false);
-
-        return new MyViewHolder(itemView);
+    public ContactsAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.contact_row_item, parent, false);
+        return new ViewHolder(view);
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView name, phones, companyName, managers, addresses, parent;
-
-        public MyViewHolder(View view) {
-            super(view);
-            name = view.findViewById(R.id.name);
-            phones = view.findViewById(R.id.phones);
-            companyName = view.findViewById(R.id.companyName);
-            managers = view.findViewById(R.id.managers);
-            addresses = view.findViewById(R.id.addresses);
-            parent = view.findViewById(R.id.parent);
-
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // send selected contact in callback
-                    listener.onContactSelected(contactList.get(getAdapterPosition()));
-                }
-            });
-        }
+    @Override
+    public void onBindViewHolder(ContactsAdapter.ViewHolder holder, int position) {
+        holder.name.setText(contacts.get(position).getName());
+        holder.companyName.setText(contacts.get(position).getCompanyName());
+        holder.parent.setText(contacts.get(position).getParent());
+        holder.managers.setText(Arrays.toString(contacts.get(position).getManagers()));
+        holder.addresses.setText(Arrays.toString(contacts.get(position).getAddresses()));
+        holder.phones.setText(Arrays.toString(contacts.get(position).getPhones()));
     }
 
     @Override
     public int getItemCount() {
-        return contactList.size();
+        return contacts.size();
     }
 
-    public interface ContactsAdapterListener {
-        void onContactSelected(Contact contact);
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        private TextView managers;
+        private TextView name;
+        private TextView companyName;
+        private TextView phones;
+        private TextView addresses;
+        private TextView parent;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+
+            managers = itemView.findViewById(R.id.managers);
+            addresses = itemView.findViewById(R.id.addresses);
+            phones = itemView.findViewById(R.id.phones);
+            name = itemView.findViewById(R.id.name);
+            companyName = itemView.findViewById(R.id.companyName);
+            parent = itemView.findViewById(R.id.parent);
+        }
     }
 }

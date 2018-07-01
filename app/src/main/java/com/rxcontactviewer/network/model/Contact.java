@@ -1,13 +1,25 @@
 package com.rxcontactviewer.network.model;
 
-import java.lang.reflect.Array;
-
-
 public class Contact {
-    String name, companyName, parent;
-    Array phones;
-    Array addresses;
-    Array managers;
+    private String[] managers;
+    private String[] addresses;
+    private String[] phones;
+    private String name;
+    private String parent;
+    private String companyName;
+
+    public Contact(String[] managers, String[] addresses, String[] phones, String name, String companyName, String parent) {
+        this.managers = managers;
+        this.addresses = addresses;
+        this.phones = phones;
+        this.name = name;
+        this.companyName = companyName;
+        this.parent = parent;
+    }
+
+    public String[] getAddresses() {
+        return addresses;
+    }
 
     public String getName() {
         return name;
@@ -17,12 +29,24 @@ public class Contact {
         this.name = name;
     }
 
-    public String getCompanyName() {
-        return companyName;
+    public void setAddresses(String[] addresses) {
+        this.addresses = addresses;
     }
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
+    public String[] getPhones() {
+        return phones;
+    }
+
+    public void setPhones(String[] phones) {
+        this.phones = phones;
+    }
+
+    public String[] getManagers() {
+        return managers;
+    }
+
+    public void setManagers(String[] managers) {
+        this.managers = managers;
     }
 
     public String getParent() {
@@ -33,27 +57,16 @@ public class Contact {
         this.parent = parent;
     }
 
-    public Array getPhones() {
-        return phones;
+    public String getCompanyName() {
+        return companyName;
     }
 
-    public void setPhones(Array phones) {
-        this.phones = phones;
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 
-    public Array getAddresses() {
-        return addresses;
-    }
-
-    public void setAddresses(Array addresses) {
-        this.addresses = addresses;
-    }
-
-    public Array getManagers() {
-        return managers;
-    }
-
-    public void setManagers(Array managers) {
-        this.managers = managers;
+    @Override
+    public String toString() {
+        return "ClassPojo [managers = " + managers + ", parent = " + parent + ", companyName = " + companyName + "name = " + name + "addresses = " + addresses + "phones = " + phones + "]";
     }
 }
