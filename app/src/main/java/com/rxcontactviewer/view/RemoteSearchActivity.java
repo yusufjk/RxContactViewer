@@ -9,51 +9,40 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
-import com.jakewharton.rxbinding2.widget.RxTextView;
-import com.jakewharton.rxbinding2.widget.TextViewTextChangeEvent;
 import com.rxcontactviewer.R;
 import com.rxcontactviewer.adapter.ContactsAdapter;
 import com.rxcontactviewer.network.ApiClient;
 import com.rxcontactviewer.network.ApiService;
 import com.rxcontactviewer.network.model.Contact;
+import com.rxcontactviewer.network.model.ContactList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import io.reactivex.Single;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Function;
-import io.reactivex.observers.DisposableObserver;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
 
-public class RemoteSearchActivity extends AppCompatActivity implements ContactsAdapter.ContactsAdapterListener {
+public class RemoteSearchActivity extends AppCompatActivity {
 
     private static final String TAG = RemoteSearchActivity.class.getSimpleName();
-
-    private CompositeDisposable disposable = new CompositeDisposable();
-    private PublishSubject<String> publishSubject = PublishSubject.create();
+    @BindView(R.id.input_search)
+    EditText inputSearch;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
     private ApiService apiService;
     private ContactsAdapter mAdapter;
     private List<Contact> contactsList = new ArrayList<>();
-
-    @BindView(R.id.input_search)
-    EditText inputSearch;
-
-
-    @BindView(R.id.recycler_view)
-    RecyclerView recyclerView;
-
     private Unbinder unbinder;
 
     @Override
@@ -64,104 +53,63 @@ public class RemoteSearchActivity extends AppCompatActivity implements ContactsA
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        }
 
-        mAdapter = new ContactsAdapter(this, contactsList, this);
+        mAdapter = new ContactsAdapter(this, contactsList);
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
-        recyclerView.setAdapter(mAdapter);
 
         whiteNotificationBar(recyclerView);
 
         apiService = ApiClient.getClient().create(ApiService.class);
-
-        DisposableObserver<List<Contact>> observer = getSearchObserver();
-
-        disposable.add(
-                publishSubject
-                        .debounce(300, TimeUnit.MILLISECONDS)
-                        .distinctUntilChanged()
-                        .switchMapSingle(new Function<String, Single<List<Contact>>>() {
-                            @Override
-                            public Single<List<Contact>> apply(String s) {
-                                return apiService.getContacts(null, s)
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread());
-                            }
-                        })
-                        .subscribeWith(observer));
-
-
-        // skipInitialValue() - skip for the first time when EditText empty
-        disposable.add(
-                RxTextView.textChangeEvents(inputSearch)
-                        .skipInitialValue()
-                        .debounce(300, TimeUnit.MILLISECONDS)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeWith(searchContactsTextWatcher()));
-
-        disposable.add(observer);
-
-        // passing empty string fetches all the contacts
-        publishSubject.onNext("");
-    }
-
-    private DisposableObserver<List<Contact>> getSearchObserver() {
-        return new DisposableObserver<List<Contact>>() {
+        Observable<ContactList> contactObservable = apiService.getContacts().subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread());
+        contactObservable.subscribe(new Observer<ContactList>() {
             @Override
-            public void onNext(List<Contact> contacts) {
-                contactsList.clear();
-                contactsList.addAll(contacts);
-                mAdapter.notifyDataSetChanged();
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(ContactList contactList) {
+                List<Contact> contacts = contactList.getContactList();
+                for (int i = 0; i < contacts.size(); i++) {
+                    Contact contact = new Contact();
+                    contact.setName(contacts.get(i).getName());
+                    contact.setCompanyName(contacts.get(i).getCompanyName());
+                    contact.setPhones(contacts.get(i).getPhones());
+                    contact.setParent(contacts.get(i).getParent());
+                    contact.setManagers(contacts.get(i).getManagers());
+                    contact.setAddresses(contacts.get(i).getAddresses());
+                    contactsList.add(contact);
+                }
+
+                mAdapter = new ContactsAdapter(RemoteSearchActivity.this, contactsList);
+                recyclerView.setAdapter(mAdapter);
             }
 
             @Override
             public void onError(Throwable e) {
-                Log.e(TAG, "onError: " + e.getMessage());
+
             }
 
             @Override
             public void onComplete() {
 
             }
-        };
-    }
+        });
 
-    private DisposableObserver<TextViewTextChangeEvent> searchContactsTextWatcher() {
-        return new DisposableObserver<TextViewTextChangeEvent>() {
-            @Override
-            public void onNext(TextViewTextChangeEvent textViewTextChangeEvent) {
-                Log.d(TAG, "Search query: " + textViewTextChangeEvent.text());
-
-                publishSubject.onNext(textViewTextChangeEvent.text().toString());
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.e(TAG, "onError: " + e.getMessage());
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        };
     }
 
     @Override
     protected void onDestroy() {
-        disposable.clear();
         unbinder.unbind();
         super.onDestroy();
-    }
-
-    @Override
-    public void onContactSelected(Contact contact) {
-
     }
 
     private void whiteNotificationBar(View view) {
