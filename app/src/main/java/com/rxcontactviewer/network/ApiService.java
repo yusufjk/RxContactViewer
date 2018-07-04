@@ -1,12 +1,13 @@
 package com.rxcontactviewer.network;
 
-import com.rxcontactviewer.network.model.ContactWrapper;
+import com.rxcontactviewer.network.model.ContactList;
 
-import retrofit2.Call;
+import io.reactivex.Observable;
 import retrofit2.http.GET;
 
 public interface ApiService {
 
-    @GET(" https://api.myjson.com/bins/jz6bp")
-    Call<ContactWrapper> getContacts();
+    @GET("/bins/jz6bp")
+    Observable<ContactList> getContacts();
+
 }
